@@ -45,8 +45,14 @@ describe('<AuthProvider />', () => {
 
   describe('when a token is stored', () => {
     beforeEach(() => {
-      identityService['_user'] = mockUser;
-      identityService['_token'] = '3884915llf950';
+      identityService.init = jest.fn(async () => {
+        (identityService as any).session = {
+          token: '3884915llf950',
+          username: mockUser.email,
+        };
+        identityService['_user'] = mockUser;
+        return (identityService as any).session;
+      });
     });
 
     it('sets the status to authenticated', async () => {
@@ -64,8 +70,9 @@ describe('<AuthProvider />', () => {
 
   describe('when a token is not stored', () => {
     beforeEach(() => {
-      identityService['_user'] = undefined;
-      identityService['_token'] = undefined;
+      identityService.init = jest.fn(async () => {
+        (identityService as any).session = undefined;
+      });
     });
 
     it('sets the status to unauthenticated', async () => {

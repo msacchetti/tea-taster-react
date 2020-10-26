@@ -5,16 +5,16 @@ import {
 } from '@ionic-enterprise/identity-vault';
 import { BrowserVault } from './BrowserVault';
 
-export class BrowserAuthPlugin implements IonicNativeAuthPlugin {
-  private static instance: BrowserAuthPlugin | undefined = undefined;
+export class BrowserVaultPlugin implements IonicNativeAuthPlugin {
+  private static instance: BrowserVaultPlugin | undefined = undefined;
 
   private constructor() {}
 
-  public static getInstance(): BrowserAuthPlugin {
-    if (!BrowserAuthPlugin.instance) {
-      BrowserAuthPlugin.instance = new BrowserAuthPlugin();
+  public static getInstance(): BrowserVaultPlugin {
+    if (!BrowserVaultPlugin.instance) {
+      BrowserVaultPlugin.instance = new BrowserVaultPlugin();
     }
-    return BrowserAuthPlugin.instance;
+    return BrowserVaultPlugin.instance;
   }
 
   getVault(config: PluginOptions): IdentityVault {

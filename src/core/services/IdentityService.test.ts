@@ -1,7 +1,6 @@
 import { Plugins } from '@capacitor/core';
 import Axios from 'axios';
 import { User } from '../models';
-
 import { IdentityService } from './IdentityService';
 
 const mockUser: User = {
@@ -16,7 +15,6 @@ describe('IdentityService', () => {
 
   beforeEach(() => {
     identityService = IdentityService.getInstance();
-    identityService['_token'] = undefined;
     identityService['_user'] = undefined;
   });
 
@@ -26,20 +24,26 @@ describe('IdentityService', () => {
 
   describe('init', () => {
     beforeEach(() => {
-      (Plugins.Storage as any) = jest.fn();
-      (Plugins.Storage.get as any) = jest.fn(() =>
-        Promise.resolve({ value: '3884915llf950' }),
-      );
       (Axios.get as any) = jest.fn(() => Promise.resolve({ data: mockUser }));
+      identityService.restoreSession = jest.fn(async () => undefined);
     });
 
-    it('gets the stored token', async () => {
+    it('restores the session', async () => {
       await identityService.init();
-      expect(Plugins.Storage.get).toHaveBeenCalledTimes(1);
-      expect(Plugins.Storage.get).toHaveBeenCalledWith({ key: 'auth-token' });
+      expect(identityService.restoreSession).toHaveBeenCalledTimes(1);
     });
 
     describe('if there is a token', () => {
+      beforeEach(() => {
+        identityService.restoreSession = jest.fn(async () => {
+          (identityService as any).session = {
+            token: '3884915llf950',
+            username: mockUser.email,
+          };
+          return (identityService as any).session;
+        });
+      });
+
       it('assigns the token', async () => {
         await identityService.init();
         expect(identityService.token).toEqual('3884915llf950');
@@ -60,9 +64,8 @@ describe('IdentityService', () => {
 
     describe('if there is not a token', () => {
       beforeEach(() => {
-        (Plugins.Storage.get as any) = jest.fn(() =>
-          Promise.resolve({ value: null }),
-        );
+        identityService.restoreSession = jest.fn(async () => undefined);
+        (identityService as any).session = undefined;
       });
 
       it('does not assign a token', async () => {
@@ -81,6 +84,7 @@ describe('IdentityService', () => {
     beforeEach(() => {
       (Plugins.Storage as any) = jest.fn();
       (Plugins.Storage.set as any) = jest.fn(() => Promise.resolve());
+      (Plugins.Storage.clear as any) = jest.fn(() => Promise.resolve());
     });
 
     it('sets the user', async () => {
@@ -88,17 +92,13 @@ describe('IdentityService', () => {
       expect(identityService.user).toEqual(mockUser);
     });
 
-    it('sets the token', async () => {
+    it('calls the base class login', async () => {
+      identityService.login = jest.fn(async () => {});
       await identityService.set(mockUser, '19940059fkkf039');
-      expect(identityService.token).toEqual('19940059fkkf039');
-    });
-
-    it('saves the token in storage', async () => {
-      await identityService.set(mockUser, '19940059fkkf039');
-      expect(Plugins.Storage.set).toHaveBeenCalledTimes(1);
-      expect(Plugins.Storage.set).toHaveBeenCalledWith({
-        key: 'auth-token',
-        value: '19940059fkkf039',
+      expect(identityService.login).toHaveBeenCalledTimes(1);
+      expect(identityService.login).toHaveBeenCalledWith({
+        username: mockUser.email,
+        token: '19940059fkkf039',
       });
     });
   });
@@ -106,27 +106,14 @@ describe('IdentityService', () => {
   describe('clear', () => {
     beforeEach(() => {
       identityService['_user'] = mockUser;
-      identityService['_token'] = '19940059fkkf039';
       (Plugins.Storage as any) = jest.fn();
       (Plugins.Storage.remove as any) = jest.fn(() => Promise.resolve());
     });
 
-    it('clears the user', async () => {
+    it('calls the logout method', async () => {
+      identityService.logout = jest.fn(async () => {});
       await identityService.clear();
-      expect(identityService.user).toBeUndefined();
-    });
-
-    it('clears the token', async () => {
-      await identityService.clear();
-      expect(identityService.token).toBeUndefined();
-    });
-
-    it('clears the storage', async () => {
-      await identityService.clear();
-      expect(Plugins.Storage.remove).toHaveBeenCalledTimes(1);
-      expect(Plugins.Storage.remove).toHaveBeenCalledWith({
-        key: 'auth-token',
-      });
+      expect(identityService.logout).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -1,22 +1,28 @@
-import { Plugins } from '@capacitor/core';
+import { isPlatform } from '@ionic/react';
+import {
+  AuthMode,
+  DefaultSession,
+  IonicIdentityVaultUser,
+  IonicNativeAuthPlugin,
+} from '@ionic-enterprise/identity-vault';
 import Axios from 'axios';
+import { BrowserVaultPlugin } from './browser-vault/BrowserVaultPlugin';
 import { User } from '../models';
 
-export class IdentityService {
+export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
   private static instance: IdentityService | undefined = undefined;
-  private _key = 'auth-token';
-  private _token: string | undefined = undefined;
   private _user: User | undefined = undefined;
-
-  get token(): string | undefined {
-    return this._token;
-  }
 
   get user(): User | undefined {
     return this._user;
   }
 
-  private constructor() {}
+  private constructor() {
+    super(
+      { ready: () => Promise.resolve(true) },
+      { authMode: AuthMode.SecureStorage },
+    );
+  }
 
   public static getInstance(): IdentityService {
     if (!IdentityService.instance) {
@@ -26,27 +32,25 @@ export class IdentityService {
   }
 
   async init(): Promise<void> {
-    const { Storage } = Plugins;
-    const { value } = await Storage.get({ key: this._key });
-
-    if (!value) return;
-
-    this._token = value;
-    this._user = await this.fetchUser(this._token);
+    await this.restoreSession();
+    if (this.token) {
+      this._user = await this.fetchUser(this.token);
+    }
   }
 
   async set(user: User, token: string): Promise<void> {
-    const { Storage } = Plugins;
-    await Storage.set({ key: this._key, value: token });
-    this._token = token;
     this._user = user;
+    await this.login({ username: user.email, token });
   }
 
   async clear(): Promise<void> {
-    const { Storage } = Plugins;
-    await Storage.remove({ key: this._key });
-    this._token = undefined;
     this._user = undefined;
+    await this.logout();
+  }
+
+  getPlugin(): IonicNativeAuthPlugin {
+    if (isPlatform('capacitor')) return super.getPlugin();
+    return BrowserVaultPlugin.getInstance();
   }
 
   private async fetchUser(token: string): Promise<User> {
