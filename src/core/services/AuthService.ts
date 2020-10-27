@@ -19,7 +19,7 @@ export class AuthService {
 
     if (!data.success) return false;
 
-    IdentityService.getInstance().set(data.user, data.token);
+    await IdentityService.getInstance().set(data.user, data.token);
     return true;
   }
 
