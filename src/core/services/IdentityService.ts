@@ -44,7 +44,9 @@ export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
 
   async set(user: User, token: string): Promise<void> {
     this._user = user;
-    const mode = AuthMode.BiometricOnly;
+    const mode = (await this.isBiometricsAvailable())
+      ? AuthMode.BiometricOnly
+      : AuthMode.PasscodeOnly;
     await this.login({ username: user.email, token }, mode);
   }
 

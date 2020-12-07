@@ -106,6 +106,20 @@ describe('IdentityService', () => {
         AuthMode.BiometricOnly,
       );
     });
+
+    it('uses passcode if biometrics are not available', async () => {
+      identityService.isBiometricsAvailable = jest.fn(async () => false);
+      identityService.login = jest.fn(async () => {});
+      await identityService.set(mockUser, '19940059fkkf039');
+      expect(identityService.login).toHaveBeenCalledTimes(1);
+      expect(identityService.login).toHaveBeenCalledWith(
+        {
+          username: mockUser.email,
+          token: '19940059fkkf039',
+        },
+        AuthMode.PasscodeOnly,
+      );
+    });
   });
 
   describe('clear', () => {
