@@ -1,4 +1,5 @@
 import { Plugins } from '@capacitor/core';
+import { AuthMode } from '@ionic-enterprise/identity-vault';
 import Axios from 'axios';
 import { User } from '../models';
 import { IdentityService } from './IdentityService';
@@ -93,13 +94,17 @@ describe('IdentityService', () => {
     });
 
     it('calls the base class login', async () => {
+      identityService.isBiometricsAvailable = jest.fn(async () => true);
       identityService.login = jest.fn(async () => {});
       await identityService.set(mockUser, '19940059fkkf039');
       expect(identityService.login).toHaveBeenCalledTimes(1);
-      expect(identityService.login).toHaveBeenCalledWith({
-        username: mockUser.email,
-        token: '19940059fkkf039',
-      });
+      expect(identityService.login).toHaveBeenCalledWith(
+        {
+          username: mockUser.email,
+          token: '19940059fkkf039',
+        },
+        AuthMode.BiometricOnly,
+      );
     });
   });
 

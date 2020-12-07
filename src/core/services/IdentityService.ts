@@ -20,7 +20,11 @@ export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
   private constructor() {
     super(
       { ready: () => Promise.resolve(true) },
-      { authMode: AuthMode.SecureStorage },
+      {
+        unlockOnAccess: true,
+        hideScreenOnBackground: true,
+        lockAfter: 5000,
+      },
     );
   }
 
@@ -40,7 +44,8 @@ export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
 
   async set(user: User, token: string): Promise<void> {
     this._user = user;
-    await this.login({ username: user.email, token });
+    const mode = AuthMode.BiometricOnly;
+    await this.login({ username: user.email, token }, mode);
   }
 
   async clear(): Promise<void> {
