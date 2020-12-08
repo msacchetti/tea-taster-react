@@ -136,5 +136,13 @@ describe('IdentityService', () => {
     });
   });
 
+  describe('on vault locked', () => {
+    it('calls the onVaultLockedHandler method', () => {
+      identityService.onVaultLockedHandler = jest.fn();
+      identityService.onVaultLocked({ saved: true, timeout: true });
+      expect(identityService.onVaultLockedHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
   afterEach(() => jest.restoreAllMocks());
 });

@@ -1,5 +1,11 @@
 import React, { useContext } from 'react';
-import { render, cleanup, wait, waitForElement } from '@testing-library/react';
+import {
+  render,
+  cleanup,
+  wait,
+  waitForElement,
+  act,
+} from '@testing-library/react';
 import { AuthContext, AuthProvider } from './AuthContext';
 import { User } from '../models';
 import { IdentityService } from '../services';
@@ -84,6 +90,39 @@ describe('<AuthProvider />', () => {
     it('does not set the user profile', async () => {
       const { getByTestId } = render(ComponentTree);
       const user = await waitForElement(() => getByTestId('user'));
+      expect(user.textContent).toEqual('');
+    });
+  });
+
+  describe('when the vault is locked', () => {
+    beforeEach(() => {
+      identityService.init = jest.fn(async () => {
+        (identityService as any).session = {
+          token: '3884915llf950',
+          username: mockUser.email,
+        };
+        identityService['_user'] = mockUser;
+        return (identityService as any).session;
+      });
+    });
+
+    it('sets the status to unauthenticated', async () => {
+      const { getByTestId } = render(ComponentTree);
+      const status = await waitForElement(() => getByTestId('status'));
+      expect(status.textContent).toEqual('authenticated');
+      await act(() =>
+        identityService.onVaultLocked({ saved: true, timeout: true }),
+      );
+      expect(status.textContent).toEqual('unauthenticated');
+    });
+
+    it('removes the user profile', async () => {
+      const { getByTestId } = render(ComponentTree);
+      const user = await waitForElement(() => getByTestId('user'));
+      expect(user.textContent).toEqual(JSON.stringify(mockUser));
+      await act(() =>
+        identityService.onVaultLocked({ saved: true, timeout: true }),
+      );
       expect(user.textContent).toEqual('');
     });
   });

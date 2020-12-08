@@ -54,6 +54,10 @@ export const AuthProvider: React.FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const identityService = IdentityService.getInstance();
 
+  identityService.onVaultLockedHandler = () => {
+    return dispatch({ type: 'LOGOUT' });
+  };
+
   useEffect(() => {
     const init = async () => {
       await identityService.init();
