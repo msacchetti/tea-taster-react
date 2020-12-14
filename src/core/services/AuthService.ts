@@ -25,7 +25,10 @@ export class AuthService {
 
   async logout(): Promise<void> {
     const url = `${process.env.REACT_APP_DATA_SERVICE}/logout`;
-    await Axios.post(url);
-    IdentityService.getInstance().clear();
+    const headers = {
+      Authorization: `Bearer ${IdentityService.getInstance().token}`,
+    };
+    await Axios.post(url, null, { headers });
+    await IdentityService.getInstance().clear();
   }
 }
