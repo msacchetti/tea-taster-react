@@ -5,6 +5,7 @@ import {
   IonicIdentityVaultUser,
   IonicNativeAuthPlugin,
   LockEvent,
+  VaultErrorCodes,
 } from '@ionic-enterprise/identity-vault';
 import Axios from 'axios';
 import { BrowserVaultPlugin } from './browser-vault/BrowserVaultPlugin';
@@ -43,6 +44,19 @@ export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
     await this.restoreSession();
     if (this.token) {
       this._user = await this.fetchUser(this.token);
+    }
+  }
+
+  async restoreSession(): Promise<DefaultSession | undefined> {
+    try {
+      return await super.restoreSession();
+    } catch (error) {
+      if (error.code === VaultErrorCodes.VaultLocked) {
+        const vault = await this.getVault();
+        await vault.clear();
+      } else {
+        throw error;
+      }
     }
   }
 
