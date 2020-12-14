@@ -1,5 +1,5 @@
 import { Plugins } from '@capacitor/core';
-import { AuthMode } from '@ionic-enterprise/identity-vault';
+import { AuthMode, DefaultSession } from '@ionic-enterprise/identity-vault';
 import Axios from 'axios';
 import { User } from '../models';
 import { IdentityService } from './IdentityService';
@@ -141,6 +141,18 @@ describe('IdentityService', () => {
       identityService.onVaultLockedHandler = jest.fn();
       identityService.onVaultLocked({ saved: true, timeout: true });
       expect(identityService.onVaultLockedHandler).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('on session restored', () => {
+    it('calls the onSessionRestoredHandler method', () => {
+      let session: DefaultSession = {
+        username: mockUser.email,
+        token: '19940059fkkf039',
+      };
+      identityService.onSessionRestoredHandler = jest.fn();
+      identityService.onSessionRestored(session);
+      expect(identityService.onSessionRestoredHandler).toHaveBeenCalledTimes(1);
     });
   });
 

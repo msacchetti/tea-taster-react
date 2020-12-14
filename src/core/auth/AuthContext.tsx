@@ -58,6 +58,10 @@ export const AuthProvider: React.FC = ({ children }) => {
     return dispatch({ type: 'LOGOUT' });
   };
 
+  identityService.onSessionRestoredHandler = () => {
+    return dispatch({ type: 'LOGIN_SUCCESS', user: identityService.user! });
+  };
+
   useEffect(() => {
     const init = async () => {
       await identityService.init();

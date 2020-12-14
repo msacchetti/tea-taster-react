@@ -19,6 +19,7 @@ export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
   }
 
   onVaultLockedHandler: () => void = () => {};
+  onSessionRestoredHandler: () => void = () => {};
 
   private constructor() {
     super(
@@ -60,6 +61,10 @@ export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
 
   async onVaultLocked(evt: LockEvent): Promise<void> {
     return this.onVaultLockedHandler();
+  }
+
+  async onSessionRestored(session: DefaultSession) {
+    return this.onSessionRestoredHandler();
   }
 
   getPlugin(): IonicNativeAuthPlugin {

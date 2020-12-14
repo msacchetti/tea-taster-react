@@ -9,6 +9,7 @@ import {
 import { AuthContext, AuthProvider } from './AuthContext';
 import { User } from '../models';
 import { IdentityService } from '../services';
+import { DefaultSession } from '@ionic-enterprise/identity-vault';
 
 const MockConsumer: React.FC = () => {
   const { state } = useContext(AuthContext);
@@ -110,8 +111,9 @@ describe('<AuthProvider />', () => {
       const { getByTestId } = render(ComponentTree);
       const status = await waitForElement(() => getByTestId('status'));
       expect(status.textContent).toEqual('authenticated');
-      await act(() =>
-        identityService.onVaultLocked({ saved: true, timeout: true }),
+      await act(
+        async () =>
+          await identityService.onVaultLocked({ saved: true, timeout: true }),
       );
       expect(status.textContent).toEqual('unauthenticated');
     });
@@ -120,10 +122,42 @@ describe('<AuthProvider />', () => {
       const { getByTestId } = render(ComponentTree);
       const user = await waitForElement(() => getByTestId('user'));
       expect(user.textContent).toEqual(JSON.stringify(mockUser));
-      await act(() =>
-        identityService.onVaultLocked({ saved: true, timeout: true }),
+      await act(
+        async () =>
+          await identityService.onVaultLocked({ saved: true, timeout: true }),
       );
       expect(user.textContent).toEqual('');
+    });
+  });
+
+  describe('when the vault is restored', () => {
+    let session: DefaultSession = {
+      username: mockUser.email,
+      token: '3884915llf950',
+    };
+    beforeEach(() => {
+      identityService.init = jest.fn(async () => {
+        (identityService as any).session = undefined;
+      });
+    });
+
+    it('sets the status to authenticated', async () => {
+      const { getByTestId } = render(ComponentTree);
+      const status = await waitForElement(() => getByTestId('status'));
+      expect(status.textContent).toEqual('unauthenticated');
+      await act(async () => await identityService.onSessionRestored(session));
+      expect(status.textContent).toEqual('authenticated');
+    });
+
+    it('sets the user profile', async () => {
+      const { getByTestId } = render(ComponentTree);
+      const user = await waitForElement(() => getByTestId('user'));
+      expect(user.textContent).toEqual('');
+      await act(async () => {
+        await identityService.onSessionRestored(session);
+        identityService['_user'] = mockUser;
+      });
+      expect(user.textContent).toEqual(JSON.stringify(mockUser));
     });
   });
 
