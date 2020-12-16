@@ -1,4 +1,5 @@
-import { useContext } from 'react';
+import { AuthMode } from '@ionic-enterprise/identity-vault';
+import { useCallback, useContext } from 'react';
 import { AuthContext } from '.';
 import { AuthService, IdentityService } from '../services';
 
@@ -21,9 +22,28 @@ export const useAuthentication = () => {
       error: new Error('Unable to log in, please try again'),
     });
   };
+
   const logout = async (): Promise<void> => {
     await authService.logout();
     dispatch({ type: 'LOGOUT' });
+  };
+
+  const canUnlock = useCallback(async (): Promise<boolean> => {
+    if (!(await identityService.hasStoredSession())) {
+      return false;
+    }
+    const mode = await identityService.getAuthMode();
+    return (
+      mode === AuthMode.PasscodeOnly ||
+      mode === AuthMode.BiometricAndPasscode ||
+      (mode === AuthMode.BiometricOnly &&
+        (await identityService.isBiometricsAvailable()))
+    );
+  }, [identityService]);
+
+  const unlock = async (): Promise<void> => {
+    await identityService.restoreSession();
+    dispatch({ type: 'LOGIN_SUCCESS', user: identityService.user! });
   };
 
   return {
@@ -32,5 +52,7 @@ export const useAuthentication = () => {
     error: state.error,
     login,
     logout,
+    canUnlock,
+    unlock,
   };
 };

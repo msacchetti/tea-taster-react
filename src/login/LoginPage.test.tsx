@@ -3,6 +3,19 @@ import { render, wait, waitForElement } from '@testing-library/react';
 import { ionFireEvent as fireEvent } from '@ionic/react-test-utils';
 import LoginPage from './LoginPage';
 
+let mockCanUnlock = jest.fn();
+
+jest.mock('../core/auth', () => {
+  const actual = jest.requireActual('../core/auth');
+  return {
+    ...actual,
+    useAuthentication: () => ({
+      ...actual.useAuthentication(),
+      canUnlock: mockCanUnlock,
+    }),
+  };
+});
+
 describe('<LoginPage />', () => {
   it('displays the header', async () => {
     const { container } = render(<LoginPage />);
@@ -107,5 +120,31 @@ describe('<LoginPage />', () => {
       });
       expect(errorDiv).toHaveTextContent(expected);
     });
+  });
+
+  describe('initialization', () => {
+    describe('without a stored session', () => {
+      beforeEach(() => (mockCanUnlock = jest.fn(() => Promise.resolve(false))));
+
+      it('does not show the unlock panel', async () => {
+        const expected = /Unlock/;
+        const { container } = render(<LoginPage />);
+        await wait(() => expect(container).not.toHaveTextContent(expected));
+      });
+    });
+
+    describe('with a stored session', () => {
+      beforeEach(() => (mockCanUnlock = jest.fn(() => Promise.resolve(true))));
+
+      it('does not show the unlock panel', async () => {
+        const expected = /Unlock/;
+        const { container } = render(<LoginPage />);
+        await wait(() => expect(container).toHaveTextContent(expected));
+      });
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 });
