@@ -4,7 +4,6 @@ import {
   DefaultSession,
   IonicIdentityVaultUser,
   IonicNativeAuthPlugin,
-  LockEvent,
   VaultErrorCodes,
 } from '@ionic-enterprise/identity-vault';
 import Axios from 'axios';
@@ -18,9 +17,6 @@ export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
   get user(): User | undefined {
     return this._user;
   }
-
-  onVaultLockedHandler: () => void = () => {};
-  onSessionRestoredHandler: () => void = () => {};
 
   private constructor() {
     super(
@@ -71,14 +67,6 @@ export class IdentityService extends IonicIdentityVaultUser<DefaultSession> {
   async clear(): Promise<void> {
     this._user = undefined;
     await this.logout();
-  }
-
-  async onVaultLocked(evt: LockEvent): Promise<void> {
-    return this.onVaultLockedHandler();
-  }
-
-  async onSessionRestored(session: DefaultSession) {
-    return this.onSessionRestoredHandler();
   }
 
   getPlugin(): IonicNativeAuthPlugin {

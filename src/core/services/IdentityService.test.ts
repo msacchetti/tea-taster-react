@@ -136,25 +136,27 @@ describe('IdentityService', () => {
     });
   });
 
-  describe('on vault locked', () => {
-    it('calls the onVaultLockedHandler method', () => {
-      identityService.onVaultLockedHandler = jest.fn();
-      identityService.onVaultLocked({ saved: true, timeout: true });
-      expect(identityService.onVaultLockedHandler).toHaveBeenCalledTimes(1);
-    });
-  });
+  // MOVE TO AUTH CONTEXT TESTS
+  // --------------------------
+  // describe('on vault locked', () => {
+  //   it('calls the onVaultLockedHandler method', () => {
+  //     identityService.onVaultLockedHandler = jest.fn();
+  //     identityService.onVaultLocked({ saved: true, timeout: true });
+  //     expect(identityService.onVaultLockedHandler).toHaveBeenCalledTimes(1);
+  //   });
+  // });
 
-  describe('on session restored', () => {
-    it('calls the onSessionRestoredHandler method', () => {
-      let session: DefaultSession = {
-        username: mockUser.email,
-        token: '19940059fkkf039',
-      };
-      identityService.onSessionRestoredHandler = jest.fn();
-      identityService.onSessionRestored(session);
-      expect(identityService.onSessionRestoredHandler).toHaveBeenCalledTimes(1);
-    });
-  });
+  // describe('on session restored', () => {
+  //   it('calls the onSessionRestoredHandler method', () => {
+  //     let session: DefaultSession = {
+  //       username: mockUser.email,
+  //       token: '19940059fkkf039',
+  //     };
+  //     identityService.onSessionRestoredHandler = jest.fn();
+  //     identityService.onSessionRestored(session);
+  //     expect(identityService.onSessionRestoredHandler).toHaveBeenCalledTimes(1);
+  //   });
+  // });
 
   afterEach(() => jest.restoreAllMocks());
 });

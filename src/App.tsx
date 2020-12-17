@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { createRef, useEffect, useRef } from 'react';
 import { Redirect, Route } from 'react-router-dom';
 import { Plugins } from '@capacitor/core';
-import { IonApp, IonRouterOutlet, isPlatform } from '@ionic/react';
+import { IonApp, IonModal, IonRouterOutlet, isPlatform } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { ProtectedRoute } from './core/auth';
 import LoginPage from './login/LoginPage';
@@ -33,8 +33,17 @@ const App: React.FC = () => {
     if (isPlatform('capacitor')) SplashScreen.hide();
   }, []);
 
+  const passcodeModal = createRef<HTMLIonModalElement>();
+
+  useEffect(() => {
+    console.log(passcodeModal.current?.dismiss());
+  }, [passcodeModal]);
+
   return (
     <IonApp>
+      <IonModal isOpen={true} ref={passcodeModal} onDidDismiss={() => {}}>
+        <p>Test</p>
+      </IonModal>
       <IonReactRouter>
         <IonRouterOutlet>
           <Route exact path="/login" component={LoginPage} />
