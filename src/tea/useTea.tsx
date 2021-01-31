@@ -1,6 +1,6 @@
 import { Plugins } from '@capacitor/core';
 import { useCallback } from 'react';
-import apiInstance from '../core/apiInstance';
+import { useAuthInterceptor } from '../core/auth';
 import { Tea } from '../shared/models';
 
 const images: Array<string> = [
@@ -15,9 +15,11 @@ const images: Array<string> = [
 ];
 
 export const useTea = () => {
+  const { instance } = useAuthInterceptor();
+
   const getTeas = useCallback(async (): Promise<Tea[]> => {
     const url = `/tea-categories`;
-    const { data } = await apiInstance.get(url);
+    const { data } = await instance.get(url);
     return await Promise.all(
       data.map(async (item: any) => await fromJsonToTea(item)),
     );
@@ -25,7 +27,7 @@ export const useTea = () => {
 
   const getTeaById = useCallback(async (id: number): Promise<Tea> => {
     const url = `/tea-categories/${id}`;
-    const { data } = await apiInstance.get(url);
+    const { data } = await instance.get(url);
     return await fromJsonToTea(data);
   }, []);
 

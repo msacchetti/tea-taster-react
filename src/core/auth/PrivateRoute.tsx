@@ -2,25 +2,21 @@ import React from 'react';
 import { Route, Redirect, RouteProps } from 'react-router';
 import { useAuthentication } from './useAuthentication';
 
-interface ProtectedRouteProps extends RouteProps {
+interface PrivateRouteProps extends RouteProps {
   component: React.ComponentType<any>;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+export const PrivateRoute: React.FC<PrivateRouteProps> = ({
   component: Component,
   ...rest
 }) => {
-  const { status } = useAuthentication();
+  const { session } = useAuthentication();
 
   return (
     <Route
       {...rest}
       render={props =>
-        status === 'authenticated' ? (
-          <Component {...props} />
-        ) : (
-          <Redirect to="/login" />
-        )
+        session ? <Component {...props} /> : <Redirect to="/login" />
       }
     />
   );

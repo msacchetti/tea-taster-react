@@ -1,5 +1,5 @@
 import { renderHook, act, cleanup } from '@testing-library/react-hooks';
-import apiInstance from '../core/apiInstance';
+import Axios from 'axios';
 import { TastingNote } from '../shared/models';
 import { useTastingNotes } from './useTastingNotes';
 
@@ -15,9 +15,7 @@ const mockNote = {
 describe('useTea', () => {
   describe('get all notes', () => {
     beforeEach(() => {
-      (apiInstance.get as any) = jest.fn(() =>
-        Promise.resolve({ data: [mockNote] }),
-      );
+      (Axios.get as any) = jest.fn(() => Promise.resolve({ data: [mockNote] }));
 
       it('gets the notes', async () => {
         let notes: Array<TastingNote> = [];
@@ -25,7 +23,7 @@ describe('useTea', () => {
         await act(async () => {
           notes = await result.current.getNotes();
         });
-        expect(apiInstance.get).toHaveBeenCalledTimes(1);
+        expect(Axios.get).toHaveBeenCalledTimes(1);
         expect(notes).toEqual([mockNote]);
       });
     });
@@ -33,9 +31,7 @@ describe('useTea', () => {
 
   describe('get a singular note', () => {
     beforeEach(() => {
-      (apiInstance.get as any) = jest.fn(() =>
-        Promise.resolve({ data: mockNote }),
-      );
+      (Axios.get as any) = jest.fn(() => Promise.resolve({ data: mockNote }));
     });
 
     it('gets a single TastingNote', async () => {
@@ -44,14 +40,14 @@ describe('useTea', () => {
       await act(async () => {
         note = await result.current.getNoteById(4);
       });
-      expect(apiInstance.get).toHaveBeenCalledTimes(1);
+      expect(Axios.get).toHaveBeenCalledTimes(1);
       expect(note).toEqual(mockNote);
     });
   });
 
   describe('delete a note', () => {
     beforeEach(() => {
-      (apiInstance.delete as any) = jest.fn(() => Promise.resolve());
+      (Axios.delete as any) = jest.fn(() => Promise.resolve());
     });
 
     it('deletes a single note', async () => {
@@ -59,13 +55,13 @@ describe('useTea', () => {
       await act(async () => {
         await result.current.deleteNote(4);
       });
-      expect(apiInstance.delete).toHaveBeenCalledTimes(1);
+      expect(Axios.delete).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('save a note', () => {
     beforeEach(() => {
-      (apiInstance.post as any) = jest.fn(() => Promise.resolve());
+      (Axios.post as any) = jest.fn(() => Promise.resolve());
     });
 
     it('saves a single note', async () => {
@@ -73,7 +69,7 @@ describe('useTea', () => {
       await act(async () => {
         await result.current.saveNote(mockNote);
       });
-      expect(apiInstance.post).toHaveBeenCalledTimes(1);
+      expect(Axios.post).toHaveBeenCalledTimes(1);
     });
   });
 

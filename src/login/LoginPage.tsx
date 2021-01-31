@@ -19,7 +19,7 @@ import { logInOutline } from 'ionicons/icons';
 import { useAuthentication } from '../core/auth';
 
 const LoginPage: React.FC = () => {
-  const { login, status, error } = useAuthentication();
+  const { login, session, error } = useAuthentication();
   const history = useHistory();
   const { handleSubmit, control, formState, errors } = useForm<{
     email: string;
@@ -29,8 +29,8 @@ const LoginPage: React.FC = () => {
   });
 
   useEffect(() => {
-    status === 'authenticated' && history.replace('/tabs');
-  }, [status, history]);
+    session && history.replace('/tabs');
+  }, [session, history]);
 
   const handleLogin = async (data: { email: string; password: string }) => {
     await login(data.email, data.password);
@@ -102,7 +102,7 @@ const LoginPage: React.FC = () => {
             <div>
               {errors.password?.type === 'required' && 'Password is required'}
             </div>
-            {error && <div>{error.message}</div>}
+            {error && <div>{error}</div>}
           </div>
         </form>
       </IonContent>

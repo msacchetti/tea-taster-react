@@ -1,65 +1,74 @@
 import React from 'react';
+import Axios from 'axios';
+import { Plugins } from '@capacitor/core';
 import { renderHook, act, cleanup } from '@testing-library/react-hooks';
 import { useAuthentication } from './useAuthentication';
 import { AuthProvider } from './AuthContext';
-import { AuthService, IdentityService } from '../services';
-import { User } from '../models';
+import { mockSession } from './__mocks__/authMocks';
 
 const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
 
-const mockUser: User = {
-  id: 42,
-  firstName: 'Joe',
-  lastName: 'Tester',
-  email: 'test@test.org',
-};
-
 describe('useAuthentication', () => {
-  let authService: AuthService;
-  let identityService: IdentityService;
-
   beforeEach(() => {
-    authService = AuthService.getInstance();
-    identityService = IdentityService.getInstance();
-    identityService.init = jest.fn();
+    (Plugins.Storage as any) = jest.fn();
+    (Plugins.Storage.get as any) = jest.fn(async () => ({ value: null }));
+    (Plugins.Storage.set as any) = jest.fn(async () => ({}));
+    (Axios.post as any) = jest.fn(async () => ({
+      data: {
+        success: true,
+        token: mockSession.token,
+        user: mockSession.user,
+      },
+    }));
   });
 
   describe('login', () => {
-    beforeEach(() => {
-      authService.login = jest.fn(() => {
-        identityService['_user'] = mockUser;
-        return Promise.resolve(true);
+    it('POSTs the login request', async () => {
+      const url = `${process.env.REACT_APP_DATA_SERVICE}/login`;
+      const { result, waitForNextUpdate } = renderHook(
+        () => useAuthentication(),
+        { wrapper },
+      );
+      await waitForNextUpdate();
+      await act(() => result.current.login('test@test.com', 'P@ssword!'));
+      expect(Axios.post).toHaveBeenCalledTimes(1);
+      expect(Axios.post).toHaveBeenCalledWith(url, {
+        username: 'test@test.com',
+        password: 'P@ssword!',
       });
-      identityService['_user'] = undefined;
-      identityService['_token'] = undefined;
     });
 
     describe('on success', () => {
-      it('sets the status to authenticated', async () => {
+      it('stores the token in storage', async () => {
         const { result, waitForNextUpdate } = renderHook(
           () => useAuthentication(),
           { wrapper },
         );
         await waitForNextUpdate();
-        await act(() => result.current.login('test@test.com', 'P@ssword'));
-        expect(result.current.status).toEqual('authenticated');
+        await act(() => result.current.login('test@test.com', 'P@ssword!'));
+        expect(Plugins.Storage.set).toHaveBeenCalledTimes(1);
+        expect(Plugins.Storage.set).toHaveBeenCalledWith({
+          key: 'auth-token',
+          value: mockSession.token,
+        });
       });
 
-      it('sets the user on successful login', async () => {
+      it('sets the session', async () => {
         const { result, waitForNextUpdate } = renderHook(
           () => useAuthentication(),
           { wrapper },
         );
         await waitForNextUpdate();
-        identityService['_user'] = mockUser;
-        await act(() => result.current.login('test@test.com', 'P@ssword'));
-        expect(result.current.user).toEqual(mockUser);
+        await act(() => result.current.login('test@test.com', 'P@ssword!'));
+        expect(result.current.session).toEqual(mockSession);
       });
     });
 
     describe('on failure', () => {
       beforeEach(() => {
-        authService.login = jest.fn(() => Promise.resolve(false));
+        (Axios.post as any) = jest.fn(async () => ({
+          data: { success: false },
+        }));
       });
 
       it('sets the error', async () => {
@@ -68,41 +77,75 @@ describe('useAuthentication', () => {
           { wrapper },
         );
         await waitForNextUpdate();
-        await act(() => result.current.login('test@test.com', 'P@ssword'));
-        expect(result.current.error).toBeDefined();
+        await act(() => result.current.login('test@test.com', 'P@ssword!'));
+        expect(result.current.error).toEqual('Failed to log in.');
       });
     });
   });
 
   describe('logout', () => {
     beforeEach(() => {
-      identityService['_user'] = mockUser;
-      authService.logout = jest.fn(() => {
-        identityService['_user'] = undefined;
-        return Promise.resolve();
+      (Plugins.Storage.remove as any) = jest.fn(async () => ({}));
+      (Plugins.Storage.get as any) = jest.fn(async () => ({
+        value: mockSession.token,
+      }));
+      (Axios.get as any) = jest.fn(async () => ({ data: mockSession.user }));
+    });
+
+    it('POSTs the logout request', async () => {
+      const url = `${process.env.REACT_APP_DATA_SERVICE}/logout`;
+      const headers = { Authorization: 'Bearer ' + mockSession.token };
+      const { result, waitForNextUpdate } = renderHook(
+        () => useAuthentication(),
+        { wrapper },
+      );
+      await waitForNextUpdate();
+      await act(() => result.current.logout());
+      expect(Axios.post).toHaveBeenCalledTimes(1);
+      expect(Axios.post).toHaveBeenCalledWith(url, null, { headers });
+    });
+
+    describe('on success', () => {
+      it('removes the token from storage', async () => {
+        const { result, waitForNextUpdate } = renderHook(
+          () => useAuthentication(),
+          { wrapper },
+        );
+        await waitForNextUpdate();
+        await act(() => result.current.logout());
+        expect(Plugins.Storage.remove).toHaveBeenCalledTimes(1);
+        expect(Plugins.Storage.remove).toHaveBeenCalledWith({
+          key: 'auth-token',
+        });
+      });
+
+      it('clears the session', async () => {
+        const { result, waitForNextUpdate } = renderHook(
+          () => useAuthentication(),
+          { wrapper },
+        );
+        await waitForNextUpdate();
+        expect(result.current.session).toEqual(mockSession);
+        await act(() => result.current.logout());
+        expect(result.current.session).toBeUndefined();
       });
     });
 
-    it('sets the status to unauthenticated', async () => {
-      const { result, waitForNextUpdate } = renderHook(
-        () => useAuthentication(),
-        { wrapper },
-      );
-      await waitForNextUpdate();
-      await act(() => result.current.login('test@test.com', 'P@ssword'));
-      await act(() => result.current.logout());
-      expect(result.current.status).toEqual('unauthenticated');
-    });
-
-    it('sets the user to undefined', async () => {
-      const { result, waitForNextUpdate } = renderHook(
-        () => useAuthentication(),
-        { wrapper },
-      );
-      await waitForNextUpdate();
-      await act(() => result.current.login('test@test.com', 'P@ssword'));
-      await act(() => result.current.logout());
-      expect(result.current.user).not.toBeDefined();
+    describe('on failure', () => {
+      it('sets the error', async () => {
+        const { result, waitForNextUpdate } = renderHook(
+          () => useAuthentication(),
+          { wrapper },
+        );
+        await waitForNextUpdate();
+        await act(() => result.current.login('test@test.com', 'P@ssword!'));
+        expect(result.current.session).toEqual(mockSession);
+        (Axios.post as any) = jest.fn(async () => {
+          throw new Error('Failed to log out');
+        });
+        await act(() => result.current.logout());
+        expect(result.current.error).toEqual('Failed to log out');
+      });
     });
   });
 

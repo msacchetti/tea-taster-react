@@ -1,14 +1,14 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { Plugins } from '@capacitor/core';
-import App from './App';
+import { TeaTaster } from './App';
 import { isPlatform } from '@ionic/react';
 jest.mock('@ionic/react', () => {
   const actual = jest.requireActual('@ionic/react');
   return { ...actual, isPlatform: jest.fn() };
 });
 
-describe('<App />', () => {
+describe('<TeaTaster />', () => {
   beforeEach(() => {
     (Plugins.SplashScreen as any) = jest.fn();
     (Plugins.SplashScreen.hide as any) = jest.fn();
@@ -19,7 +19,7 @@ describe('<App />', () => {
       beforeEach(() => (isPlatform as any).mockImplementation(() => true));
 
       it('should hide the splash screen', () => {
-        const { container } = render(<App />);
+        const { container } = render(<TeaTaster />);
         expect(container).toBeDefined();
         expect(Plugins.SplashScreen.hide).toHaveBeenCalledTimes(1);
       });
@@ -31,7 +31,7 @@ describe('<App />', () => {
       beforeEach(() => (isPlatform as any).mockImplementation(() => true));
 
       it('should hide the splash screen', () => {
-        const { container } = render(<App />);
+        const { container } = render(<TeaTaster />);
         expect(container).toBeDefined();
         expect(Plugins.SplashScreen.hide).toHaveBeenCalledTimes(1);
       });
@@ -43,7 +43,7 @@ describe('<App />', () => {
       beforeEach(() => (isPlatform as any).mockImplementation(() => false));
 
       it('should not hide the splash screen', () => {
-        const { container } = render(<App />);
+        const { container } = render(<TeaTaster />);
         expect(container).toBeDefined();
         expect(Plugins.SplashScreen.hide).not.toHaveBeenCalled();
       });

@@ -1,9 +1,9 @@
 import React from 'react';
 import { renderHook, act, cleanup } from '@testing-library/react-hooks';
-import apiInstance from '../core/apiInstance';
 import { Tea } from '../shared/models';
 import { useTea } from './useTea';
 import { Plugins } from '@capacitor/core';
+import Axios from 'axios';
 
 const expectedTeas = [
   {
@@ -101,7 +101,7 @@ describe('useTea', () => {
 
   describe('get all teas', () => {
     beforeEach(() => {
-      (apiInstance.get as any) = jest.fn(() =>
+      (Axios.get as any) = jest.fn(() =>
         Promise.resolve({ data: resultTeas() }),
       );
     });
@@ -111,7 +111,7 @@ describe('useTea', () => {
       await act(async () => {
         await result.current.getTeas();
       });
-      expect(apiInstance.get).toHaveBeenCalledTimes(1);
+      expect(Axios.get).toHaveBeenCalledTimes(1);
     });
 
     it('adds an image to each tea item', async () => {
@@ -126,7 +126,7 @@ describe('useTea', () => {
 
   describe('get a specific tea', () => {
     beforeEach(() => {
-      (apiInstance.get as any) = jest.fn(() =>
+      (Axios.get as any) = jest.fn(() =>
         Promise.resolve({ data: resultTeas()[0] }),
       );
     });
@@ -136,7 +136,7 @@ describe('useTea', () => {
       await act(async () => {
         await result.current.getTeaById(4);
       });
-      expect(apiInstance.get).toHaveBeenCalledTimes(1);
+      expect(Axios.get).toHaveBeenCalledTimes(1);
     });
 
     it('adds an image to the Tea object', async () => {

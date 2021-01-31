@@ -3,7 +3,7 @@ import { Redirect, Route } from 'react-router-dom';
 import { Plugins } from '@capacitor/core';
 import { IonApp, IonRouterOutlet, isPlatform } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { ProtectedRoute } from './core/auth';
+import { AuthProvider, PrivateRoute } from './core/auth';
 import LoginPage from './login/LoginPage';
 import Tabs from './Tabs';
 
@@ -27,7 +27,7 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 import './theme/global.css';
 
-const App: React.FC = () => {
+export const TeaTaster: React.FC = () => {
   useEffect(() => {
     const { SplashScreen } = Plugins;
     if (isPlatform('capacitor')) SplashScreen.hide();
@@ -38,12 +38,18 @@ const App: React.FC = () => {
       <IonReactRouter>
         <IonRouterOutlet>
           <Route exact path="/login" component={LoginPage} />
-          <ProtectedRoute path="/tabs" component={Tabs} />
+          <PrivateRoute path="/tabs" component={Tabs} />
           <Route exact path="/" render={() => <Redirect to="/login" />} />
         </IonRouterOutlet>
       </IonReactRouter>
     </IonApp>
   );
 };
+
+const App: React.FC = () => (
+  <AuthProvider>
+    <TeaTaster />
+  </AuthProvider>
+);
 
 export default App;

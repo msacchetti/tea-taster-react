@@ -9,7 +9,7 @@ import {
   IonTabs,
 } from '@ionic/react';
 import { leaf, documentText, informationCircle } from 'ionicons/icons';
-import { ProtectedRoute } from './core/auth';
+import { PrivateRoute } from './core/auth';
 import AboutPage from './about/AboutPage';
 import TastingNotesPage from './tasting-notes/TastingNotesPage';
 import TeaDetailsPage from './tea/details/TeaDetailsPage';
@@ -23,14 +23,14 @@ const Tabs: React.FC<RouteComponentProps> = ({ match }) => (
         path={match.url}
         render={() => <Redirect to={`${match.url}/tea`} />}
       />
-      <ProtectedRoute exact path={`${match.url}/tea`} component={TeaPage} />
-      <ProtectedRoute exact path={`${match.url}/about`} component={AboutPage} />
-      <ProtectedRoute
+      <PrivateRoute exact path={`${match.url}/tea`} component={TeaPage} />
+      <PrivateRoute exact path={`${match.url}/about`} component={AboutPage} />
+      <PrivateRoute
         exact
         path={`${match.url}/tasting-notes`}
         component={TastingNotesPage}
       />
-      <ProtectedRoute
+      <PrivateRoute
         path={`${match.url}/tea/details/:id`}
         component={TeaDetailsPage}
       />

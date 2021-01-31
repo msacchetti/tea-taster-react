@@ -1,3 +1,4 @@
 export * from './AuthContext';
 export * from './useAuthentication';
-export * from './ProtectedRoute';
+export * from './useAuthInterceptor';
+export * from './PrivateRoute';
