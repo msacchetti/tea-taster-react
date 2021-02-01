@@ -1,11 +1,9 @@
 import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useContext } from 'react';
-import { useHistory } from 'react-router';
 import { AuthContext } from './AuthContext';
 
 export const useAuthInterceptor = () => {
   const { state, dispatch } = useContext(AuthContext);
-  const history = useHistory();
   const instance = Axios.create({
     baseURL: process.env.REACT_APP_DATA_SERVICE,
   });

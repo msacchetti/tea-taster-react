@@ -4,7 +4,7 @@ import { Plugins } from '@capacitor/core';
 import { renderHook, act, cleanup } from '@testing-library/react-hooks';
 import { useAuthentication } from './useAuthentication';
 import { AuthProvider } from './AuthContext';
-import { mockSession } from './__mocks__/authMocks';
+import { mockSession } from './__mocks__/mockSession';
 
 const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
 

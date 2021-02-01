@@ -3,14 +3,8 @@ import Axios from 'axios';
 import { Plugins } from '@capacitor/core';
 import { renderHook, act, cleanup } from '@testing-library/react-hooks';
 import { AuthProvider } from './AuthContext';
-import { mockSession } from './__mocks__/authMocks';
+import { mockSession } from './__mocks__/mockSession';
 import { useAuthInterceptor } from './useAuthInterceptor';
-import { useHistory } from 'react-router';
-jest.mock('react-router', () => ({
-  useHistory: () => ({
-    replace: jest.fn(),
-  }),
-}));
 
 const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
 
