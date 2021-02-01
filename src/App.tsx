@@ -35,15 +35,8 @@ const App: React.FC = () => {
 
   const passcodeModal = createRef<HTMLIonModalElement>();
 
-  useEffect(() => {
-    console.log(passcodeModal.current?.dismiss());
-  }, [passcodeModal]);
-
   return (
     <IonApp>
-      <IonModal isOpen={true} ref={passcodeModal} onDidDismiss={() => {}}>
-        <p>Test</p>
-      </IonModal>
       <IonReactRouter>
         <IonRouterOutlet>
           <Route exact path="/login" component={LoginPage} />
