@@ -16,6 +16,7 @@ const initialState: AuthState = {
 };
 
 export type AuthAction =
+  | { type: 'CLEAR_SESSION' }
   | { type: 'RESTORE_SESSION'; session: Session }
   | { type: 'LOGIN' }
   | { type: 'LOGIN_SUCCESS'; session: Session }
@@ -29,6 +30,8 @@ const reducer = (
   action: AuthAction,
 ): AuthState => {
   switch (action.type) {
+    case 'CLEAR_SESSION':
+      return { ...state, session: undefined };
     case 'RESTORE_SESSION':
       return { ...state, session: action.session };
     case 'LOGIN':

@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import { render, cleanup, wait, waitForElement } from '@testing-library/react';
 import { AuthContext, AuthProvider } from './AuthContext';
-import { User } from '../models';
 import { mockSession } from './__mocks__/authMocks';
 import { Plugins } from '@capacitor/core';
 import Axios from 'axios';

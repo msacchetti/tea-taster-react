@@ -5,66 +5,119 @@ import { renderHook, act, cleanup } from '@testing-library/react-hooks';
 import { AuthProvider } from './AuthContext';
 import { mockSession } from './__mocks__/authMocks';
 import { useAuthInterceptor } from './useAuthInterceptor';
+import { useHistory } from 'react-router';
+jest.mock('react-router', () => ({
+  useHistory: () => ({
+    replace: jest.fn(),
+  }),
+}));
 
 const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
 
 describe('useAuthInterceptor', () => {
   beforeEach(() => {
     (Plugins.Storage as any) = jest.fn();
+    (Plugins.Storage.get as any) = jest.fn(async () => ({ value: undefined }));
+    (Axios.get as any) = jest.fn(async () => ({ data: {} }));
   });
 
-  describe('when a session is stored', () => {
+  it('sets the baseURL of requests', async () => {
+    const { result, waitForNextUpdate } = renderHook(
+      () => useAuthInterceptor(),
+      { wrapper },
+    );
+    await waitForNextUpdate();
+    const baseURL = result.current.instance.defaults.baseURL;
+    expect(baseURL).toEqual('https://cs-demo-api.herokuapp.com');
+  });
+
+  describe('request', () => {
+    describe('when a session is stored', () => {
+      beforeEach(() => {
+        (Plugins.Storage.get as any) = jest.fn(async () => ({
+          value: mockSession.token,
+        }));
+      });
+
+      it('sets the Authorization header in the configuration', async () => {
+        const { result, waitForNextUpdate } = renderHook(
+          () => useAuthInterceptor(),
+          { wrapper },
+        );
+        await waitForNextUpdate();
+        const request: any = result.current.instance.interceptors.request;
+        const { headers } = await request.handlers[0].fulfilled({
+          headers: {},
+        });
+        expect(headers.Authorization).toEqual('Bearer ' + mockSession.token);
+      });
+    });
+
+    describe('when a session is not stored', () => {
+      it('does not set the Authorization header in the configuration', async () => {
+        const { result, waitForNextUpdate } = renderHook(
+          () => useAuthInterceptor(),
+          { wrapper },
+        );
+        await waitForNextUpdate();
+        const request: any = result.current.instance.interceptors.request;
+        const { headers } = await request.handlers[0].fulfilled({
+          headers: {},
+        });
+        expect(headers.Authorization).toBeUndefined();
+      });
+    });
+  });
+
+  describe('response', () => {
     beforeEach(() => {
       (Plugins.Storage.get as any) = jest.fn(async () => ({
         value: mockSession.token,
       }));
-      (Axios.get as any) = jest.fn(async () => ({ data: mockSession.user }));
     });
 
-    it('sets the Authorization header in the configuration', async () => {
-      const { result, waitForNextUpdate } = renderHook(
-        () => useAuthInterceptor(),
-        { wrapper },
-      );
-      await waitForNextUpdate();
-      const request: any = result.current.instance.interceptors.request;
-      const { headers } = await request.handlers[0].fulfilled({ headers: {} });
-      expect(headers.Authorization).toEqual('Bearer ' + mockSession.token);
-    });
-
-    it('sets the baseURL of requests', async () => {
-      const { result, waitForNextUpdate } = renderHook(
-        () => useAuthInterceptor(),
-        { wrapper },
-      );
-      await waitForNextUpdate();
-      const baseURL = result.current.instance.defaults.baseURL;
-      expect(baseURL).toEqual('https://cs-demo-api.herokuapp.com');
-    });
-  });
-
-  describe('when a session is not stored', () => {
-    beforeEach(() => {
-      (Plugins.Storage.get as any) = jest.fn(async () => ({
-        value: undefined,
-      }));
-    });
-
-    it('throws an error', async () => {
-      const { result, waitForNextUpdate } = renderHook(
-        () => useAuthInterceptor(),
-        { wrapper },
-      );
-      await waitForNextUpdate();
-      try {
-        const request: any = result.current.instance.interceptors.request;
-        await request.handlers[0].fulfilled({ headers: {} });
-        expect(true).toBeFalsy();
-      } catch (error) {
-        expect(error.message).toEqual(
-          'This operation requires authorization, please sign in.',
+    describe('when a 401 error status is returned', () => {
+      it('clears the session', async () => {
+        const { result, waitForNextUpdate } = renderHook(
+          () => useAuthInterceptor(),
+          { wrapper },
         );
-      }
+        await waitForNextUpdate();
+        const response: any = result.current.instance.interceptors.response;
+        act(() => {
+          const rejected = response.handlers[0].rejected({
+            response: { status: 401 },
+          });
+          expect(rejected).rejects.toBeDefined();
+        });
+        const request: any = result.current.instance.interceptors.request;
+        const { headers } = await request.handlers[0].fulfilled({
+          headers: {},
+        });
+        expect(headers.Authorization).toBeUndefined();
+      });
+    });
+
+    describe('when a non-401 error status is returned', () => {
+      it('does not clear the session', async () => {
+        const { result, waitForNextUpdate } = renderHook(
+          () => useAuthInterceptor(),
+          { wrapper },
+        );
+        await waitForNextUpdate();
+        const response: any = result.current.instance.interceptors.response;
+        act(() => {
+          const rejected = response.handlers[0].rejected({
+            response: { status: 400 },
+          });
+          expect(rejected).rejects.toBeDefined();
+        });
+        const request: any = result.current.instance.interceptors.request;
+        const { headers } = await request.handlers[0].fulfilled({
+          headers: {},
+        });
+        expect(headers.Authorization).toEqual('Bearer ' + mockSession.token);
+      });
     });
   });
 
