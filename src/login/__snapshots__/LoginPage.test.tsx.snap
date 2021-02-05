@@ -36,6 +36,7 @@ exports[`<LoginPage /> renders consistently 1`] = `
             </ion-label>
             <ion-input
               id="email-input"
+              type="email"
               value=""
             />
           </ion-item>

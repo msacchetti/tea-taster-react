@@ -59,6 +59,7 @@ const LoginPage: React.FC = () => {
                     id="email-input"
                     onIonChange={(e: any) => onChange(e.detail.value!)}
                     value={value}
+                    type="email"
                   />
                 )}
                 control={control}
