@@ -3,7 +3,7 @@ import Axios from 'axios';
 import React, { createContext, useEffect, useReducer, useState } from 'react';
 import { Session } from '../models';
 
-export interface AuthState {
+interface AuthState {
   session?: Session;
   loading: boolean;
   error: string;
