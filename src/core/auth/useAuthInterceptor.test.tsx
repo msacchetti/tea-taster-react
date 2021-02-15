@@ -77,18 +77,18 @@ describe('useAuthInterceptor', () => {
           { wrapper },
         );
         await waitForNextUpdate();
+
         const response: any = result.current.instance.interceptors.response;
         act(() => {
           const rejected = response.handlers[0].rejected({
             response: { status: 401 },
           });
           expect(rejected).rejects.toBeDefined();
+          expect(rejected).rejects.toEqual({
+            message: 'Unauthorized session.',
+            response: { status: 401 },
+          });
         });
-        const request: any = result.current.instance.interceptors.request;
-        const { headers } = await request.handlers[0].fulfilled({
-          headers: {},
-        });
-        expect(headers.Authorization).toBeUndefined();
       });
     });
 
@@ -107,7 +107,7 @@ describe('useAuthInterceptor', () => {
           expect(rejected).rejects.toBeDefined();
         });
         const request: any = result.current.instance.interceptors.request;
-        const { headers } = await request.handlers[0].fulfilled({
+        const { headers } = request.handlers[0].fulfilled({
           headers: {},
         });
         expect(headers.Authorization).toEqual('Bearer ' + mockSession.token);

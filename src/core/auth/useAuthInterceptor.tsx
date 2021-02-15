@@ -1,5 +1,5 @@
 import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { useContext, useMemo } from 'react';
+import { useContext, useRef } from 'react';
 import { AuthContext } from './AuthContext';
 
 export const useAuthInterceptor = () => {
@@ -9,27 +9,27 @@ export const useAuthInterceptor = () => {
     throw new Error('useAuthInterceptor must be used with an AuthProvider');
   }
 
-  const instance = useMemo(() => {
-    const axios = Axios.create({
-      baseURL: process.env.REACT_APP_DATA_SERVICE,
-    });
+  const axios = useRef(Axios.create());
+  const instance = axios.current;
 
-    axios.interceptors.request.use((config: AxiosRequestConfig) => {
-      if (state.session)
-        config.headers.Authorization = `Bearer ${state.session.token}`;
-      return config;
-    });
+  instance.defaults.baseURL = process.env.REACT_APP_DATA_SERVICE;
 
-    axios.interceptors.response.use(
-      (response: AxiosResponse<any>) => response,
-      (error: any) => {
-        if (error.response.status === 401) dispatch({ type: 'CLEAR_SESSION' });
-        return Promise.reject(error);
-      },
-    );
+  instance.interceptors.request.use((config: AxiosRequestConfig) => {
+    if (state.session)
+      config.headers.Authorization = `Bearer ${state.session.token}`;
+    return config;
+  });
 
-    return axios;
-  }, [state, dispatch]);
+  instance.interceptors.response.use(
+    (response: AxiosResponse<any>) => response,
+    (error: any) => {
+      if (error.response.status === 401) {
+        dispatch({ type: 'CLEAR_SESSION' });
+        return Promise.reject({ ...error, message: 'Unauthorized session.' });
+      }
+      return Promise.reject(error);
+    },
+  );
 
   return { instance };
 };
